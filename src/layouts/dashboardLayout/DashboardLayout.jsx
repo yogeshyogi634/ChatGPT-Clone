@@ -21,9 +21,9 @@ const DashboardLayout = () => {
     <div className="dashboardLayout">
       <div className="menu">
         <ChatList />
-        <div className="content">
-          <Outlet />
-        </div>
+      </div>
+      <div className="content">
+        <Outlet />
       </div>
     </div>
   );
