@@ -5,6 +5,7 @@ import { useState } from "react";
 
 const HomePage = () => {
   const [typingStatus, setTypingStatus] = useState("human1");
+
   return (
     <div className="homepage">
       <div className="left">
