@@ -1,4 +1,4 @@
-import express from "express";
+import express, { text } from "express";
 import ImageKit from "imagekit";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -39,12 +39,6 @@ app.get("/api/upload", (req, res) => {
   const result = imagekit.getAuthenticationParameters();
   res.send(result);
 });
-
-// app.get("/api/test", ClerkExpressRequireAuth(), (req, res) => {
-//   const userId = req.auth.userId;
-//   console.log(userId);
-//   res.send("Success!");
-// });
 
 app.post("/api/chats", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
@@ -98,11 +92,51 @@ app.post("/api/chats", ClerkExpressRequireAuth(), async (req, res) => {
 app.get("/api/userchats", ClerkExpressRequireAuth(), async (req, res) => {
   const userId = req.auth.userId;
   try {
-    const userChats = UserChats.find({ userId });
+    const userChats = await UserChats.find({ userId });
     res.status(200).send(userChats[0].chats);
   } catch (error) {
     console.log(error);
     res.status(500).send("Error fetching userchats!");
+  }
+});
+
+app.get("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
+  const userId = req.auth.userId;
+  try {
+    const chat = await Chat.findOne({ _id: req.params.id, userId });
+    res.status(200).send(chat);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error fetching chat!");
+  }
+});
+
+app.put("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
+  const userId = req.auth.userId;
+  const { question, answer, img } = req.body;
+
+  const newItems = [
+    ...(question
+      ? [{ role: "user", parts: [{ text: question }], ...(img && { img }) }]
+      : []),
+    { role: "model", parts: [{ text: answer }] },
+  ];
+
+  try {
+    const updatedChat = await Chat.updateOne(
+      { _id: req.params.id, userId },
+      {
+        $push: {
+          history: {
+            $each: newItems,
+          },
+        },
+      }
+    );
+    res.status(200).send(updatedChat);
+  } catch (error) {
+    console.log(err);
+    res.status(500).send("Error adding conversation!");
   }
 });
 
